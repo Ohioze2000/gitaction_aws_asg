@@ -30,12 +30,12 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Plan
-        run: terraform plan -input=false 
+      # - name: Terraform Plan
+      #   run: terraform plan -input=false 
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve
+        run: terraform destroy -auto-approve
 
          # --- SUCCESS NOTIFICATION ---
       - name: Slack Notification - Success
