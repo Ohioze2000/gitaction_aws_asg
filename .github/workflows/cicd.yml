@@ -32,7 +32,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -var="public_key_content=${{ secrets.SSH_PUBLIC_KEY }}"
+        run: terraform plan -input=false 
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
