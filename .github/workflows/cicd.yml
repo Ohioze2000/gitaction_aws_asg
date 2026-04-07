@@ -27,15 +27,25 @@ jobs:
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
+         # --- SUCCESS NOTIFICATION ---
+      - name: Slack Notification - Success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_COLOR: 'good'
+          SLACK_MESSAGE: "✅ Infrastructure Provisioning and Application Deployment Started SUCCESSFULLY!"
+          SLACK_TITLE: "Infrastructure Provisioning and Application Deployment Status: STARTED"
+
       - name: Terraform Init
         run: terraform init
 
-      # - name: Terraform Plan
-      #   run: terraform plan -input=false 
+      - name: Terraform Plan
+        run: terraform plan -input=false 
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform destroy -auto-approve
+        run: terraform apply -auto-approve
 
          # --- SUCCESS NOTIFICATION ---
       - name: Slack Notification - Success
@@ -44,8 +54,8 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_COLOR: 'good'
-          SLACK_MESSAGE: "✅ Deployment SUCCESSFULLY!"
-          SLACK_TITLE: "Deployment Status: SUCCESS"
+          SLACK_MESSAGE: "✅ Infrastructure Provisioned and Application Deployed SUCCESSFULLY!"
+          SLACK_TITLE: "Infrastructure Provisioning and Application Deployment Status: SUCCESS"
 
       # --- FAILURE NOTIFICATION ---
       - name: Slack Notification - Failure
@@ -54,5 +64,5 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_COLOR: 'danger'
-          SLACK_MESSAGE: "❌ Deployment FAILED. Check GitHub Actions logs."
-          SLACK_TITLE: "Deployment Status: FAILED"
+          SLACK_MESSAGE: "❌ Infrastructure Provisioning and Application Deployment FAILED. Check GitHub Actions logs."
+          SLACK_TITLE: "Infrastructure Provisioning and Application Deployment Status: FAILED"
