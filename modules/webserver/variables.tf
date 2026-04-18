@@ -46,10 +46,6 @@ variable "iam_instance_profile_name" {
   description = "The name of the IAM instance profile to attach to the EC2 instances."
 }
 
-
-
-# ... (Keep your existing vpc_id, env_prefix, etc.)
-
 variable "target_group_arn" {
   description = "The ARN of the ALB target group for ASG registration"
   type        = string

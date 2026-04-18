@@ -62,8 +62,6 @@ resource "aws_launch_template" "web_server_lt" {
   # Base64 encode the user data for Launch Templates
   user_data = filebase64("${path.root}/entry-script.sh")
 
-  #user_data = file("entry-script.sh")
-
   tag_specifications {
     resource_type = "instance"
     tags = {
