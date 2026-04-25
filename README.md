@@ -4,99 +4,55 @@
 
 ```mermaid
 
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#232f3e', 'edgeLabelBackground':'#ffffff', 'tertiaryColor': '#fff'}}}%%
-
 graph TD
-    %% --- Define Nodes/Icons ---
-    subgraph Users_Layer [Access Layer]
+    %% --- Define Nodes ---
+    subgraph Users [Access Layer]
         User[("fa:fa-user End Users")]
         SlackDevs[("fa:fa-slack Maintainers/Devs")]
     end
 
-    subgraph GitHub [GitOps Workflow: GitHub]
-        Repo[("fa:fa-github Git Repository")]
-        ActionRunner["fa:fa-cogs GitHub Action Runner"]
+    subgraph GitHub_Layer [GitOps]
+        Repo[("fa:fa-github Repo")]
+        ActionRunner["fa:fa-cogs Runner"]
     end
 
-    subgraph AWS_Cloud [AWS Cloud]
-        TF_Cloud[("fa:fa-cloud Terraform Cloud<br/>(State Lock/Auth)")]
-
-        subgraph VPC [Custom VPC: us-east-1]
-            IGW["fa:fa-door-open Internet Gateway"]
-
-            %% Internal Services
-            ACM["fa:fa-certificate AWS ACM<br/>(SSL/TLS)"]
-            R53[("fa:fa-search Route 53<br/>(DNS A Record Alias)")]
-            Secrets[("fa:fa-key AWS Secrets Manager")]
-
-            subgraph Public_Subnets ["Public Subnets (AZ-A, AZ-B)"]
-                ALB["fa:fa-exchange-alt Application Load Balancer (ALB)"]
-                NAT_GW["fa:fa-network-wired NAT Gateway"]
+    subgraph AWS [AWS Cloud]
+        TF_Cloud[("fa:fa-cloud Terraform Cloud")]
+        
+        subgraph VPC [VPC]
+            Secrets[("fa:fa-key Secrets Manager")]
+            
+            subgraph Monitoring [Observability]
+                CW_Alarm["fa:fa-bell CloudWatch"]
+                SNS_Topic[("fa:fa-comment-alt SNS Topic")]
             end
-
-            subgraph Private_Subnets ["Private Subnets (AZ-A, AZ-B)"]
-                ASG["fa:fa-tasks Auto Scaling Group (ASG)"]
-                TargetGroup[("fa:fa-list Target Group")]
-                LT["fa:fa-file-code Launch Template"]
-
-                %% Instance Cluster
-                subgraph App_Nodes [Webserver Nodes]
-                    EC2_A["fa:fa-server EC2 Node A<br/>(App + UserData)"]
-                    EC2_B["fa:fa-server EC2 Node B<br/>(App + UserData)"]
-                end
-            end
-
-            %% Observability Subgraph
-            subgraph Monitoring_Layer [Observability & Alerting]
-                CW_Alarm["fa:fa-bell CloudWatch Alarm"]
-                SNS_Topic[("fa:fa-comment-alt SNS Topic <br> Slack Alerts")]
+            
+            subgraph Network [Public/Private Networking]
+                ALB["fa:fa-exchange-alt ALB"]
+                ASG["fa:fa-tasks ASG"]
+                EC2_Nodes["fa:fa-server EC2 Cluster"]
             end
         end
     end
 
-    %% --- Connect the Nodes (Define Flow) ---
+    %% --- Flow Definitions (Using Pipe Syntax) ---
+    Repo -->|1. Push| ActionRunner
+    ActionRunner -->|2. Auth| TF_Cloud
+    TF_Cloud -->|3. Deploy| VPC
 
-    %% 1. GitOps / IaC Workflow
-    Repo -- "1. Git Push" --> ActionRunner
-    ActionRunner -- "2. Authenticate (Secret Keys)" --> TF_Cloud
-    TF_Cloud -- "3. Deploy HCL (Modules)" --> VPC
+    User -->|4. App Access| ALB
+    ALB -->|5. Forward| EC2_Nodes
 
-    %% 2. User Traffic Flow (Data Path)
-    User -- "4. Visit: app.yourdomain.com" --> R53
-    R53 -- "5. Resolve Alias" --> ALB
-    ALB -.-> ACM
-    ALB -- "6. Forward Traffic (Port 80)<br/>(SG Chaining)" --> TargetGroup
-    TargetGroup -- "7. Direct to Healthiest" --> App_Nodes
+    EC2_Nodes -->|6. Metrics| CW_Alarm
+    CW_Alarm -->|7. Alarm| SNS_Topic
+    
+    %% THE PREVIOUSLY BROKEN LINE (Refactored to avoid quotes)
+    SNS_Topic -.->|8. Auth| Secrets
+    SNS_Topic -->|9. Slack Alert| SlackDevs
 
-    %% 3. Instance Internet Path
-    App_Nodes -- "8. Apt Install (user_data)" --> NAT_GW
-    NAT_GW --> IGW
-
-    %% 4. Management Loop (ASG)
-    ASG -- "9. Provisions via" --> LT
-    LT -- "10. Spawns/Replaces" --> App_Nodes
-
-    %% 5. Observability Loop
-    EC2_A & EC2_B -- "11. Metrics (CPU, 5xx)" --> CW_Alarm
-    CW_Alarm -- "12. Breach Detected (ALARM)" --> SNS_Topic
-    SNS_Topic -- "13. Authenticate (Webhook URL)" -.-> Secrets
-    SNS_Topic -- "14. Post actionable alerts to Slack" --> SlackDevs
-
-    %% --- Stylize Nodes ---
-    classDef gitHub fill:#fcfcfc,stroke:#333,stroke-width:1px;
-    classDef awsCore fill:#232f3e,stroke:#fff,stroke-width:1px,color:#fff;
-    classDef subnet fill:#f7f7f7,stroke:#666,stroke-width:1px,stroke-dasharray: 5 5;
-    classDef observability fill:#fff0f0,stroke:#ec1c24,stroke-width:1px,color:#ec1c24;
-    classDef internet fill:#f0faff,stroke:#007bff,stroke-width:1px;
-    classDef secrets fill:#fffbe6,stroke:#d48806,stroke-width:1px;
-
-    %% Apply Classes
-    class Repo,ActionRunner gitHub;
-    class VPC,ALB,ASG,LT,EC2_A,EC2_B awsCore;
-    class Public_Subnets,Private_Subnets subnet;
-    class CW_Alarm,SNS_Topic observability;
-    class R53,ACM,IGW internet;
-    class Secrets secrets;
+    %% Stylize
+    classDef aws fill:#232f3e,stroke:#fff,color:#fff;
+    class ALB,ASG,EC2_Nodes,VPC,TF_Cloud aws;
 ```
 
 ## 📌 Project Overview
