@@ -76,14 +76,13 @@ graph TD
     ASG -- "9. Provisions via" --> LT
     LT -- "10. Spawns/Replaces" --> App_Nodes
 
-    %% 5. Observability Loop (The 'Speech' Path)
+    %% 5. Observability Loop
     EC2_A & EC2_B -- "11. Metrics (CPU, 5xx)" --> CW_Alarm
     CW_Alarm -- "12. Breach Detected (ALARM)" --> SNS_Topic
     SNS_Topic -- "13. Authenticate (Webhook URL)" -.-> Secrets
-    SNS_Topic -- "14. Post actionable alerts to Slack" --> Slack
+    SNS_Topic -- "14. Post actionable alerts to Slack" --> SlackDevs
 
     %% --- Stylize Nodes ---
-    %% Colors: Blue (Entry), Green (Success Path), Red (Monitor), Dark (AWS Core)
     classDef gitHub fill:#fcfcfc,stroke:#333,stroke-width:1px;
     classDef awsCore fill:#232f3e,stroke:#fff,stroke-width:1px,color:#fff;
     classDef subnet fill:#f7f7f7,stroke:#666,stroke-width:1px,stroke-dasharray: 5 5;
