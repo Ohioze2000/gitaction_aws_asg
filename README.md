@@ -80,7 +80,7 @@ graph TD
     EC2_A & EC2_B -- "11. Metrics (CPU, 5xx)" --> CW_Alarm
     CW_Alarm -- "12. Breach Detected (ALARM)" --> SNS_Topic
     SNS_Topic -- "13. Authenticate (Webhook URL)" -.-> Secrets
-    SNS_Topic -- "14. Post actionable alerts to Slack"
+    SNS_Topic -- "14. Post actionable alerts to Slack" --> Slack
 
     %% --- Stylize Nodes ---
     %% Colors: Blue (Entry), Green (Success Path), Red (Monitor), Dark (AWS Core)
