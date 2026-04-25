@@ -29,12 +29,12 @@ graph TD
             R53[("fa:fa-search Route 53<br/>(DNS A Record Alias)")]
             Secrets[("fa:fa-key AWS Secrets Manager")]
 
-            subgraph Public_Subnets [Public Subnets (AZ-A, AZ-B)]
+            subgraph Public_Subnets ["Public Subnets (AZ-A, AZ-B)"]
                 ALB["fa:fa-exchange-alt Application Load Balancer (ALB)"]
                 NAT_GW["fa:fa-network-wired NAT Gateway"]
             end
 
-            subgraph Private_Subnets [Private Subnets (AZ-A, AZ-B)]
+            subgraph Private_Subnets ["Private Subnets (AZ-A, AZ-B)"]
                 ASG["fa:fa-tasks Auto Scaling Group (ASG)"]
                 TargetGroup[("fa:fa-list Target Group")]
                 LT["fa:fa-file-code Launch Template"]
