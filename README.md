@@ -49,7 +49,7 @@ graph TD
             %% Observability Subgraph
             subgraph Monitoring_Layer [Observability & Alerting]
                 CW_Alarm["fa:fa-bell CloudWatch Alarm"]
-                SNS_Topic[("fa:fa-comment-alt SNS Topic<br/>(Slack Alerts)")]
+                SNS_Topic[("fa:fa-comment-alt SNS Topic <br> Slack Alerts")]
             end
         end
     end
