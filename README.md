@@ -4,55 +4,76 @@
 
 ```mermaid
 
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#0073bb', 'edgeLabelBackground':'#f4f4f4', 'tertiaryColor': '#f4f4f4'}}}%%
 graph TD
-    %% --- Define Nodes ---
-    subgraph Users [Access Layer]
-        User[("fa:fa-user End Users")]
-        SlackDevs[("fa:fa-slack Maintainers/Devs")]
+    %% Define External Nodes
+    Internet((🌍 Users on Internet))
+
+    subgraph "1. Source & CI/CD (GitHub)"
+        GitRepo[GitHub Repository]
+        GHA[GitHub Actions Runner]
     end
 
-    subgraph GitHub_Layer [GitOps]
-        Repo[("fa:fa-github Repo")]
-        ActionRunner["fa:fa-cogs Runner"]
+    subgraph "2. IaC & State (HCP Terraform)"
+        TFCloud[HCP Terraform Workspace]
     end
 
-    subgraph AWS [AWS Cloud]
-        TF_Cloud[("fa:fa-cloud Terraform Cloud")]
+    %% Define AWS Cloud Boundaries
+    subgraph "3. AWS Region: us-east-1"
+        Route53[Route 53 DNS]
+        ACM[ACM SSL Cert]
         
-        subgraph VPC [VPC]
-            Secrets[("fa:fa-key Secrets Manager")]
+        subgraph "AWS VPC (Elastic & Scalable)"
             
-            subgraph Monitoring [Observability]
-                CW_Alarm["fa:fa-bell CloudWatch"]
-                SNS_Topic[("fa:fa-comment-alt SNS Topic")]
+            %% Define Public Subnets
+            subgraph "Public Subnet (AZ-A & AZ-B)"
+                ALB[Application Load Balancer]
+                IGW[Internet Gateway]
             end
-            
-            subgraph Network [Public/Private Networking]
-                ALB["fa:fa-exchange-alt ALB"]
-                ASG["fa:fa-tasks ASG"]
-                EC2_Nodes["fa:fa-server EC2 Cluster"]
+
+            %% Define Private Subnets
+            subgraph "Private App Subnet (AZ-A & AZ-B)"
+                subgraph "ASG: Auto Scaling Group"
+                    EC2_A[EC2 Instance A]
+                    EC2_B[EC2 Instance B]
+                end
+                LT[Launch Template]
+                NAT[NAT Gateway]
             end
         end
     end
 
-    %% --- Flow Definitions (Using Pipe Syntax) ---
-    Repo -->|1. Push| ActionRunner
-    ActionRunner -->|2. Auth| TF_Cloud
-    TF_Cloud -->|3. Deploy| VPC
-
-    User -->|4. App Access| ALB
-    ALB -->|5. Forward| EC2_Nodes
-
-    EC2_Nodes -->|6. Metrics| CW_Alarm
-    CW_Alarm -->|7. Alarm| SNS_Topic
+    %% Define Flows & Relationships
+    GitRepo -->|"A. Code Push"| GHA
+    GHA -->|"B. terraform apply"| TFCloud
+    TFCloud -->|"C. Updates Launch Template"| LT
+    LT -->|"D. Triggers Instance Refresh"| ASG
     
-    %% THE PREVIOUSLY BROKEN LINE (Refactored to avoid quotes)
-    SNS_Topic -.->|8. Auth| Secrets
-    SNS_Topic -->|9. Slack Alert| SlackDevs
+    %% External User Flow
+    Internet -->|"1. Request"| Route53
+    Internet -->|"2. HTTPS Request"| ALB
+    ACM -.->|"Cert Validation"| ALB
 
-    %% Stylize
-    classDef aws fill:#232f3e,stroke:#fff,color:#fff;
-    class ALB,ASG,EC2_Nodes,VPC,TF_Cloud aws;
+    %% Traffic Distribution
+    ALB -->|"3. Routes to Target Group"| EC2_A
+    ALB -->|"3. Routes to Target Group"| EC2_B
+    
+    %% Notifications
+    GHA -.->|Status| Slack((Slack))
+    TFCloud -.->|Status| Slack((Slack))
+
+    %% Styling
+    classDef git fill:#f6f8fa,stroke:#d1d5da,stroke-width:2px,color:#24292e;
+    classDef aws fill:#FF9900,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef aws_blue fill:#0073bb,stroke:#fff,stroke-width:1.5px,color:#fff;
+    classDef hashicorp fill:#000,stroke:#844FBA,stroke-width:2px,color:#fff;
+    classDef tool fill:#f4f4f4,stroke:#333,stroke-width:1px;
+
+    class GitRepo,GHA git;
+    class Route53,ACM,ALB,IGW,NAT,LT aws_blue;
+    class EC2_A,EC2_B aws;
+    class TFCloud hashicorp;
+    class Slack tool;
 ```
 
 ## 📌 Project Overview
